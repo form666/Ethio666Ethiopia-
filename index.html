@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ID Form with Face & Fingerprint Scan</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #111;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2, h3 {
+      color: #ff3333;
+      text-align: center;
+    }
+
+    form {
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.7);
+      max-width: 500px;
+      margin: auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    input, textarea {
+      background-color: #333;
+      color: white;
+    }
+
+    button {
+      background-color: #ff3333;
+      color: white;
+      font-weight: bold;
+      margin-top: 15px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #cc0000;
+    }
+
+    video, canvas {
+      display: block;
+      margin: 10px auto;
+      border: 3px solid #ff3333;
+      border-radius: 8px;
+    }
+
+    .fingerprint-container {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .fingerprint {
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, #990000, #660000);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .fingerprint:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(255, 0, 0, 1);
+    }
+
+    .signature-container {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .signature {
+      border: 2px solid #ff3333;
+      width: 100%;
+      height: 150px;
+      background: #f2f2f2;
+    }
+
+    .signature button {
+      background-color: #ff3333;
+      border-radius: 5px;
+      font-weight: bold;
+      color: white;
+    }
+
+  </style>
+</head>
+<body>
+  <h>የኢትዮጵያ 666 አማኞች</h></h2>
+
+  <!-- Date -->
+  <h3>ቀን በውጮች: <span id="currentDate"></span></h3>
+  <script>
+    // Set the current date at the top
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+  </script>
+
+  <form id="userForm">
+    <label>ስም:</label>
+    <input type="text" name="fullname" required>
+
+    <label>የአባት ስም:</label>
+    <input type="text" name="fathername" required>
+
+    <label>የአያት ስም:</label>
+    <input type="text" name="grandfathername" required>
+
+    <label>የእናት ስም:</label>
+    <input type="text" name="mothername" required>
+
+    <label>ስልክ ቁጥር:</label>
+    <input type="tel" name="phonenumber" pattern="[0-9]{10,15}" required>
+
+    <label>አድራሻ:</label>
+    <textarea name="address" rows="3" required></textarea>
+
+    <label>የባንክ ስም:</label>
+    <input type="text" name="bankname" required>
+
+    <label>የባንክ ሂሳብ ቁጥር:</label>
+    <input type="text" name="bankaccount" required>
+
+    <label>የመታወቂያ ፎቶ (በፊትለፊት):</label>
+    <input type="file" name="idfront" accept="image/*" required>
+
+    <label>የመታወቂያ ፎቶ (በጀርባ):</label>
+    <input type="file" name="idback" accept="image/*" required>
+
+    <!-- Signature Section -->
+    <div class="signature-container">
+      <label>ፊርማ:</label>
+      <canvas id="signature" class="signature"></canvas>
+      <br>
+      <button type="button" onclick="clearSignature()">Clear Signature</button>
+    </div>
+
+    <!-- Submit Button at the end of the form -->
+    <button type="submit">Submit</button>
+  </form>
+
+  <h3>የፊት አሻራ</h3>
+  <video id="video" width="320" height="240" autoplay></video>
+  <button onclick="takeSnapshot()">ፎቶ አንሳ</button>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+  <h3>የጣት አሻራ</h3>
+  <div class="fingerprint-container">
+    <div class="fingerprint" onclick="scanFinger(1)">Finger 1</div>
+    <div class="fingerprint" onclick="scanFinger(2)">Finger 2</div>
+    <div class="fingerprint" onclick="scanFinger(3)">Finger 3</div>
+    <div class="fingerprint" onclick="scanFinger(4)">Finger 4</div>
+    <div class="fingerprint" onclick="scanFinger(5)">Finger 5</div>
+  </div>
+
+  <script>
+    // Start webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        document.getElementById('video').srcObject = stream;
+      })
+      .catch(error => {
+        alert("Camera access failed: " + error.message);
+      });
+
+    // Take snapshot from webcam
+    function takeSnapshot() {
+      let video = document.getElementById('video');
+      let canvas = document.getElementById('canvas');
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      alert("Face captured (not saved)!");
+    }
+
+    // Fake fingerprint scan
+    function scanFinger(fingerNum) {
+      alert("Finger " + fingerNum + " scanned (simulated)!");
+    }
+
+    // Signature drawing
+    const signatureCanvas = document.getElementById('signature');
+    const signatureCtx = signatureCanvas.getContext('2d');
+    let drawing = false;
+
+    signatureCanvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      signatureCtx.moveTo(e.clientX - signatureCanvas.offsetLeft, e.clientY - signatureCanvas.offsetTop);
+    });
+
+    signatureCanvas.addEventListener('mousemove', (e) => {
+      if (drawing) {
+        signatureCtx.lineTo(e.clientX - signatureCanvas.offsetLeft, e.clientY - signatureCanvas.offsetTop);
+        signatureCtx.stroke();
+      }
+    });
+
+    signatureCanvas.addEventListener('mouseup', () => {
+      drawing = false;
+    });
+
+    // Clear signature
+    function clearSignature() {
+      signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    }
+
+    // Prevent form submission for testing
+    document.getElementById('userForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Form submitted (locally, no data sent).');
+    });
+  </script>
+</body>
+</html>
