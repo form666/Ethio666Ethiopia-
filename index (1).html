@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Biometric ID Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: white;
+      padding: 20px;
+    }
+
+    form {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 0 20px red;
+    }
+
+    h2 {
+      text-align: center;
+      color: red;
+    }
+
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      background: #2c2c2c;
+      color: white;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+
+    input[readonly] {
+      background: #2c2c2c;
+      color: #aaa;
+    }
+
+    canvas {
+      width: 100%;
+      border: 1px solid red;
+      margin-top: 10px;
+      background: black;
+    }
+
+    .fingerprint-area {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+
+    .finger {
+      width: 80px;
+      height: 140px;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Fingerprint_picture.svg/800px-Fingerprint_picture.svg.png');
+      background-size: cover;
+      background-position: center;
+      border: 2px solid red;
+      border-radius: 40% 40% 50% 50%;
+      margin: 10px;
+      position: relative;
+      animation: scan-glow 2s infinite alternate;
+    }
+
+    .label {
+      position: absolute;
+      bottom: -20px;
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: red;
+    }
+
+    @keyframes scan-glow {
+      0% { box-shadow: 0 0 5px red; }
+      100% { box-shadow: 0 0 15px red; }
+    }
+
+    #video {
+      width: 100%;
+      max-height: 250px;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 2px solid red;
+    }
+
+    .scanner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      pointer-events: none;
+      background: linear-gradient(to bottom, transparent 45%, rgba(255,0,0,0.4) 50%, transparent 55%);
+      animation: face-scan 2s infinite;
+    }
+
+    .video-container {
+      position: relative;
+      margin-top: 15px;
+    }
+
+    @keyframes face-scan {
+      0% { background-position-y: 0%; }
+      100% { background-position-y: 100%; }
+    }
+
+    button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 20px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: darkred;
+    }
+  </style>
+</head>
+<body>
+
+  <form onsubmit="return submitForm()">
+    <h2>Biometric ID Registration</h2>
+
+    <!-- Current Date -->
+    <label>Date of Registration</label>
+    <input type="text" id="current-date" readonly>
+
+    <label>Father's Name</label>
+    <input type="text" required>
+
+    <label>Grandfather's Name</label>
+    <input type="text" required>
+
+    <label>Mother's Name</label>
+    <input type="text" required>
+
+    <label>Date of Birth</label>
+    <input type="date" required>
+
+    <label>Phone Number</label>
+    <input type="tel" required pattern="[0-9]{10}">
+
+    <label>Bank Name</label>
+    <input type="text" required>
+
+    <label>Account Number</label>
+    <input type="text" required>
+
+    <!-- Signature -->
+    <label>Signature</label>
+    <canvas id="signature-pad" height="150"></canvas>
+    <button type="button" onclick="clearSignature()">Clear Signature</button>
+    <input type="hidden" id="signature-data" name="signature">
+
+    <!-- Fingerprint Scan -->
+    <label>Fingerprint Scan</label>
+    <div class="fingerprint-area">
+      <div class="finger"><div class="label">Thumb</div></div>
+      <div class="finger"><div class="label">Index</div></div>
+      <div class="finger"><div class="label">Middle</div></div>
+      <div class="finger"><div class="label">Ring</div></div>
+      <div class="finger"><div class="label">Pinky</div></div>
+    </div>
+
+    <!-- Face Scan -->
+    <label>Face Scan</label>
+    <div class="video-container">
+      <video id="video" autoplay playsinline></video>
+      <div class="scanner-overlay"></div>
+    </div>
+    <button type="button" onclick="captureFace()">Capture Face</button>
+    <canvas id="face-canvas" style="display:none;"></canvas>
+    <input type="hidden" id="face-data" name="face">
+
+    <!-- Final Submit -->
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    // Set today's date in the date field
+    document.getElementById('current-date').value = new Date().toLocaleDateString();
+
+    // Signature Pad
+    const sigCanvas = document.getElementById('signature-pad');
+    const sigCtx = sigCanvas.getContext('2d');
+    let drawing = false;
+
+    sigCanvas.addEventListener('mousedown', e => {
+      drawing = true;
+      sigCtx.beginPath();
+      sigCtx.moveTo(e.offsetX, e.offsetY);
+    });
+
+    sigCanvas.addEventListener('mouseup', () => drawing = false);
+    sigCanvas.addEventListener('mousemove', e => {
+      if (!drawing) return;
+      sigCtx.lineTo(e.offsetX, e.offsetY);
+      sigCtx.stroke();
+    });
+
+    function clearSignature() {
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    }
+
+    // Webcam for face
+    const video = document.getElementById('video');
+    const faceCanvas = document.getElementById('face-canvas');
+    const faceCtx = faceCanvas.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(() => alert('Camera access denied.'));
+
+    function captureFace() {
+      faceCanvas.width = video.videoWidth;
+      faceCanvas.height = video.videoHeight;
+      faceCtx.drawImage(video, 0, 0);
+      document.getElementById('face-data').value = faceCanvas.toDataURL();
+      alert('Face scan captured!');
+    }
+
+    function submitForm() {
+      document.getElementById('signature-data').value = sigCanvas.toDataURL();
+      alert('Form submitted successfully with simulated biometrics.');
+      return false; // prevent default
+    }
+  </script>
+
+</body>
+</html>
