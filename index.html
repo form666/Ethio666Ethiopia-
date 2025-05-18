@@ -7,18 +7,19 @@
 <style>
   body {
     font-family: Arial, sans-serif;
+font-style: italic;
     margin: 20px;
-    background: #f9f9f9;
-    color: #333;
+    background: black;
+    color: white;
   }
   header {
     text-align: center;
     margin-bottom: 25px;
   }
   header img.flag {
-    width: 100px;
+    width: 200px;
     margin: 0 10px;
-    vertical-align: middle;
+    vertical-align: top;
   }
   header h1 {
     display: inline-block;
@@ -35,17 +36,24 @@
   form {
     max-width: 800px;
     margin: 0 auto;
-    background: #fff;
+    background: black;
     border-radius: 8px;
     padding: 25px;
     box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
   }
   fieldset {
-    margin-bottom: 25px;
-    border: 1px solid #ccc;
-    padding: 15px 20px 20px 20px;
-    border-radius: 6px;
-  }
+  margin-bottom: 30px;
+  padding: 20px 25px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: black;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease;
+}
+
+fieldset:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
   legend {
     font-weight: bold;
     padding: 0 10px;
@@ -64,7 +72,7 @@
     padding: 7px 10px;
     margin-bottom: 15px;
     border-radius: 4px;
-    border: 1px solid #aaa;
+    border: 1px solid white;
     box-sizing: border-box;
   }
   input[type="file"] {
@@ -77,40 +85,95 @@
     gap: 12px;
     justify-content: center;
   }
-  .finger-btn {
-    width: 100px;
-    height: 100px;
-    border: 2px solid #555;
-    border-radius: 12px;
-    background: #eee;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.3s, border-color 0.3s;
-  }
+.finger-btn {
+  width: 70px;
+  height: 140px;
+  background: #f2c29c;
+  border: 2px solid #b87b4f;
+  border-radius: 50% / 30%;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.5s ease, box-shadow 0.5s ease;
+  box-shadow:
+    inset 0 -8px 10px rgba(0, 0, 0, 0.08),
+    inset 0 4px 6px rgba(255, 255, 255, 0.3),
+    0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Border disappears and subtle glow after scan */
+.finger-btn.scanned {
+  border-color: #28a745; /* success green */
+  background: linear-gradient(to bottom, #b6f5c9, #7be495);
+  box-shadow:
+    0 0 25px 10px rgba(40, 167, 69, 0.5),   /* outer green glow */
+    0 8px 15px rgba(0, 0, 0, 0.2),           /* subtle depth */
+    inset 0 0 10px rgba(0, 0, 0, 0.1);       /* finger groove */
+  transition: background 0.4s, box-shadow 0.4s;
+}
+
+/* Realistic fingerprint pattern using SVG as background */
+.finger-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   .finger-btn::before {
-    content: '';
-    position: absolute;
-    top: 10%;
-    left: 50%;
-    width: 40px;
-    height: 80px;
-    background: repeating-radial-gradient(ellipse at center, lime, black 1px, #eee 3px, #eee 5px);
-    border-radius: 50% / 30%;
-    transform: translateX(-50%);
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="70" height="140" viewBox="0 0 70 140"><g fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="1"><ellipse cx="35" cy="70" rx="30" ry="65"/><ellipse cx="35" cy="70" rx="26" ry="58"/><ellipse cx="35" cy="70" rx="22" ry="50"/><ellipse cx="35" cy="70" rx="18" ry="42"/><ellipse cx="35" cy="70" rx="14" ry="34"/><ellipse cx="35" cy="70" rx="10" ry="26"/><ellipse cx="35" cy="70" rx="6" ry="18"/></g></svg>');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.6;
+  z-index: 1;
+  border-radius: inherit;
+}
+  background-repeat: repeat;
+  background-size: 12px 24px;
+  opacity: 0.5;
+  border-radius: inherit;
+  z-index: 1;
+}
+  background-repeat: repeat;
+  background-size: 10px 20px;
+  opacity: 0.5;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+/* Scan Line */
+.finger-btn::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 255, 0, 0) 0%,
+    rgba(0, 255, 0, 0.7) 50%,
+    rgba(0, 255, 0, 0) 100%
+  );
+  z-index: 2;
+  animation: scanComplete 2.2s ease-in-out 1; /* runs once */
+}
+
+/* Scan animation */
+@keyframes scanComplete {
+  0% {
+    top: -20%;
+    opacity: 0;
   }
-  .finger-btn.scanning {
-    animation: pulseFinger 1.6s infinite;
-    border-color: black;
-    background: lime;
+  20% {
+    opacity: 1;
   }
-  .finger-btn.scanned {
-    background: #4caf50;
-    border-color: #388e3c;
+  100% {
+    top: 100%;
+    opacity: 0;
   }
-  @keyframes pulseFinger {
-    0%, 100% { box-shadow: 0 0 5px 6px lime; }
-    100% { box-shadow: 0 0 90px 5px lime; }
-  }
+}
 
   .eye-scan-group {
     text-align: center;
@@ -121,82 +184,139 @@
     margin: 10px 0 15px 0;
   }
   .eyeScanBtn {
-    width: 100px;
-    height: 70px;
-    background: #eee;
-    border: 2px solid #555;
-    border-radius: 40px / 20px;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.3s, border-color 0.3s;
-  }
+  width: 100px;
+  height: 60px;
+  background: #ffffff;
+  border: 2px solid #000;
+  border-radius: 50% / 50%;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+  box-shadow: inset 0 0 8px #ccc;
+}
+
+/* Iris (the black eye effect) */
+.eyeScanBtn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, #1a1a1a 35%, #000000 60%, #2b2b2b 90%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: background 0.3s;
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+/* Optional: a white highlight for realism */
+.eyeScanBtn::after {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: 45%;
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
   .eyeScanBtn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 40px;
-    height: 40px;
-    background: radial-gradient(circle, #444 40%, #222 90%);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: background 0.3s;
-  }
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, #1a1a1a 35%, #000000 60%, #2b2b2b 90%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: background 0.3s;
+}
   .eyeScanBtn.scanning {
     animation: pulseEye 1.5s infinite;
-    border-color: #0077cc;
+    border-color: black;
     background: #d0e7ff;
   }
   .eyeScanBtn.scanned {
-    background: #4caf50;
-    border-color: #388e3c;
+    background: lime;
+    border-color: lime;
   }
   @keyframes pulseEye {
-    0%, 100% { box-shadow: 0 0 6px 2px red; }
-    50% { box-shadow: 0 0 20px 6px red; }
+    0%, 100% { box-shadow: 0 0 6px 2px lime; }
+    50% { box-shadow: 0 0 20px 6px lime; }
   }
 
-  .id-pic-container {
-    display: flex;
-    gap: 100px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .id-pic-preview {
-    width: 150px;
-    height: 100px;
-    border: 60px solid #ccc;
-    background: #f0f0f0;
-    object-fit: cover;
-    border-radius: 6px;
-  }
+  
   button[type="submit"] {
-    background: #0077cc;
-    color: white;
+    background: lime;
+    color: black;
     border: none;
     padding: 12px 30px;
-    border-radius: 6px;
+    border-radius: 20px;
     font-size: 1.1em;
     cursor: pointer;
     transition: background 0.3s;
   }
+  .id-pic-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  padding: 2rem;
+  background: #f0f4f8;
+  border-radius: 12px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Stylish ID card preview */
+.id-pic-preview {
+  width: 240px;
+  height: 160px;
+  background: #fff;
+  border: 2px solid #4caf50; /* Modern lime/green */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  object-fit: cover;
+}
+
+/* Hover effect */
+.id-pic-preview:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Optional: Label below the ID */
+.id-label {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #444;
+  font-style: italic;
+}
   button[type="submit"]:hover {
-    background: #005fa3;
+    background: white;
   }
   p.result {
     font-weight: bold;
     text-align: center;
     margin-top: 10px;
-    color: #2e7d32;
+    color: lime;
   }
 
   /* NEW: Congratulation message */
   #congratsMessage {
     display: none;
-    font-size: 1.2em;
-    background: #e0f8e9;
+    font-size: 1.5em;
+    background: black;
     padding: 15px;
-    border: 2px solid #2e7d32;
+    border: 2px solid lime;
     border-radius: 8px;
     max-width: 600px;
     margin: 20px auto;
@@ -213,9 +333,13 @@
 </header>
 
 <div class="intro">
-  <p>
-    Welcome to Ethio Canada Consultant, your trusted partner facilitating seamless migration and consultancy services between Ethiopia and Canada.
+ <p>
+   Welcome to ETHIO Canada Travel Consultant – Bridging Dreams Across Continents
+🇨🇦🇪🇹🇨🇦🇪🇹
   </p>
+  <p>At ETHIO Canada Travel Consultant, we specialize in turning your travel aspirations into reality. Whether you're planning to explore the natural beauty of Canada, reconnect with your Ethiopian roots, or pursue immigration, education, or business opportunities, we're here to guide you every step of the way.</p>
+  <p>With trusted expertise in visa consultation, travel planning, and cross-border services, we offer personalized support tailored to your unique journey. Our commitment is to ensure a smooth, stress-free experience — because your future deserves expert care.
+</p><p>🇨🇦🇪🇹🇨🇦🇪🇹🇨🇦🇪🇹</p>
 </div>
 
 <form id="registrationForm">
@@ -300,7 +424,7 @@
 
 <!-- Congratulations Message Container -->
 <div id="congratsMessage">
-  Thank you for registering with <strong>Ethio Canada Consultant</strong>! We have received your submission successfully.
+  🎉🎉🎉Thank you for registering with🎉🎉🎉 <strong>🇪🇹🇨🇦Ethio Canada Consultant🇨🇦🇪🇹</strong>! We have received your submission successfully🧾🧾🧾.
 </div>
 
 <audio id="scanSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
